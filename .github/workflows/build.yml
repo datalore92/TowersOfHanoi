@@ -31,18 +31,15 @@ jobs:
         cmake .. -G "MinGW Makefiles" -DCMAKE_MAKE_PROGRAM=mingw32-make
         mingw32-make
     - name: Package
-      shell: msys2 {0}
+      shell: pwsh
       run: |
-        mkdir -p releases/windows
-        cp build/hanoi.exe releases/windows/
-        # Copy required DLLs from MSYS2
-        which SDL2.dll | xargs cp -t releases/windows/
-        which SDL2_ttf.dll | xargs cp -t releases/windows/
-        which libfreetype-6.dll | xargs cp -t releases/windows/
-        which zlib1.dll | xargs cp -t releases/windows/
-        # Create zip file
-        cd releases/windows
-        powershell Compress-Archive -Path * -DestinationPath ../../TowersOfHanoi-windows.zip -Force
+        New-Item -ItemType Directory -Force -Path releases\windows
+        Copy-Item -Path "build\hanoi.exe" -Destination releases\windows
+        Get-Command SDL2.dll | ForEach-Object { Copy-Item $_.Source releases\windows }
+        Get-Command SDL2_ttf.dll | ForEach-Object { Copy-Item $_.Source releases\windows }
+        Get-Command libfreetype-6.dll | ForEach-Object { Copy-Item $_.Source releases\windows }
+        Get-Command zlib1.dll | ForEach-Object { Copy-Item $_.Source releases\windows }
+        Compress-Archive -Path releases\windows\* -DestinationPath TowersOfHanoi-windows.zip -Force
     - uses: actions/upload-artifact@v4
       with:
         name: windows-build
