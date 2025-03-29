@@ -1,0 +1,76 @@
+name: Build Releases
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup MSYS2
+      uses: msys2/setup-msys2@v2
+      with:
+        install: mingw-w64-x86_64-gcc mingw-w64-x86_64-SDL2 mingw-w64-x86_64-SDL2_ttf mingw-w64-x86_64-cmake make
+    - name: Build
+      shell: msys2 {0}
+      run: |
+        mkdir build
+        cd build
+        cmake .. -G "MinGW Makefiles"
+        cmake --build .
+    - name: Package
+      run: |
+        mkdir releases\windows
+        copy build\hanoi.exe releases\windows\
+        copy C:\msys64\mingw64\bin\SDL2.dll releases\windows\
+        copy C:\msys64\mingw64\bin\SDL2_ttf.dll releases\windows\
+        copy C:\msys64\mingw64\bin\libfreetype-6.dll releases\windows\
+        copy C:\msys64\mingw64\bin\zlib1.dll releases\windows\
+        Compress-Archive -Path releases\windows\* -DestinationPath TowersOfHanoi-windows.zip
+    - name: Upload Windows Build
+      uses: actions/upload-artifact@v2
+      with:
+        name: windows-build
+        path: TowersOfHanoi-windows.zip
+
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y gcc make cmake libsdl2-dev libsdl2-ttf-dev
+    - name: Build
+      run: |
+        mkdir build
+        cd build
+        cmake ..
+        cmake --build .
+    - name: Package
+      run: |
+        mkdir -p releases/linux
+        cp build/hanoi releases/linux/
+        chmod +x releases/linux/hanoi
+        tar czf TowersOfHanoi-linux.tar.gz -C releases/linux .
+    - name: Upload Linux Build
+      uses: actions/upload-artifact@v2
+      with:
+        name: linux-build
+        path: TowersOfHanoi-linux.tar.gz
+
+  create-release:
+    needs: [build-windows, build-linux]
+    runs-on: ubuntu-latest
+    steps:
+    - name: Download Artifacts
+      uses: actions/download-artifact@v2
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          windows-build/TowersOfHanoi-windows.zip
+          linux-build/TowersOfHanoi-linux.tar.gz
