@@ -31,15 +31,16 @@ jobs:
         cmake .. -G "MinGW Makefiles" -DCMAKE_MAKE_PROGRAM=mingw32-make
         mingw32-make
     - name: Package
+      shell: msys2 {0}
       run: |
-        mkdir releases\windows
-        copy build\hanoi.exe releases\windows\
-        copy C:\msys64\mingw64\bin\SDL2.dll releases\windows\
-        copy C:\msys64\mingw64\bin\SDL2_ttf.dll releases\windows\
-        copy C:\msys64\mingw64\bin\libfreetype-6.dll releases\windows\
-        copy C:\msys64\mingw64\bin\zlib1.dll releases\windows\
-        cd releases\windows
-        7z a ..\..\TowersOfHanoi-windows.zip *
+        mkdir -p releases/windows
+        cp build/hanoi.exe releases/windows/
+        cp /mingw64/bin/SDL2.dll releases/windows/
+        cp /mingw64/bin/SDL2_ttf.dll releases/windows/
+        cp /mingw64/bin/libfreetype-6.dll releases/windows/
+        cp /mingw64/bin/zlib1.dll releases/windows/
+        cd releases/windows
+        7z a ../../TowersOfHanoi-windows.zip *
     - uses: actions/upload-artifact@v4
       with:
         name: windows-build
