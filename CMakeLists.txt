@@ -18,4 +18,5 @@ target_include_directories(hanoi PRIVATE
 target_link_libraries(hanoi PRIVATE 
     ${SDL2_LIBRARIES}
     ${SDL2_TTF_LIBRARIES}
+    SDL2_ttf  # Add explicit SDL2_ttf linkage
 )
