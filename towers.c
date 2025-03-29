@@ -5,6 +5,7 @@
 
 TTF_Font* gFont = NULL;
 
+// Initialize the TTF library and load the font
 int initTTF(void) {
     if (TTF_Init() < 0) {
         printf("TTF_Init failed: %s\n", TTF_GetError());
@@ -18,11 +19,13 @@ int initTTF(void) {
     return 1;
 }
 
+// Close the TTF library and free the font
 void closeTTF(void) {
     if (gFont) TTF_CloseFont(gFont);
     TTF_Quit();
 }
 
+// Render text on the screen using SDL_ttf
 void drawText(SDL_Renderer* renderer, const char* text, SDL_Rect* rect, SDL_Color color) {
     if (!gFont) return;
     SDL_Surface* surface = TTF_RenderText_Solid(gFont, text, color);
@@ -34,43 +37,48 @@ void drawText(SDL_Renderer* renderer, const char* text, SDL_Rect* rect, SDL_Colo
     }
 }
 
+// Stack operations for tower manipulation
 void push(Tower *tower, int disk) {
-    tower->disks[tower->count++] = disk;
+    tower->disks[tower->count++] = disk;    // Add disk and increment count
 }
 
 int pop(Tower *tower) {
-    if (tower->count <= 0) return -1;
-    return tower->disks[--tower->count];
+    if (tower->count <= 0) return -1;       // Return -1 if tower is empty
+    return tower->disks[--tower->count];     // Remove and return top disk
 }
 
+// Draw the towers and disks on the screen
 void drawTowers(SDL_Renderer *renderer, Tower towers[]) {
-    // Set a soft light gray background.
+    // Set background color
     SDL_SetRenderDrawColor(renderer, 230, 230, 230, 255);
     SDL_RenderClear(renderer);
     
+    // Calculate spacing between towers
     int towerSpacing = WINDOW_WIDTH / (TOWER_COUNT + 1);
-    // Draw each tower
+    
+    // Draw the vertical poles for each tower
     for (int i = 0; i < TOWER_COUNT; i++) {
         int x = towerSpacing * (i + 1) - TOWER_WIDTH / 2;
         SDL_Rect towerRect = { x, WINDOW_HEIGHT / 4, TOWER_WIDTH, WINDOW_HEIGHT / 2 };
-        SDL_SetRenderDrawColor(renderer, 80, 80, 80, 255); // Darker gray
+        SDL_SetRenderDrawColor(renderer, 80, 80, 80, 255);
         SDL_RenderFillRect(renderer, &towerRect);
     }
     
-    // Draw disks from bottom to top
+    // Draw the disks on each tower
     for (int i = 0; i < TOWER_COUNT; i++) {
         int towerX = towerSpacing * (i + 1);
-        int baseY = WINDOW_HEIGHT * 3 / 4; // Baseline for disk stacking
-        int diskSpacing = DISK_HEIGHT;     // Vertical spacing per disk
+        int baseY = WINDOW_HEIGHT * 3 / 4;   // Bottom position for disks
         
-        // Draw disks starting from bottom (j=0) to top
+        // Draw each disk from bottom to top
         for (int j = 0; j < towers[i].count; j++) {
             int disk = towers[i].disks[j];
-            int diskWidth = 40 + disk * 20;
+            int diskWidth = 40 + disk * 20;  // Disk width based on size
             int diskX = towerX - diskWidth / 2;
-            int diskY = baseY - (j + 1) * diskSpacing;  // Changed this line
+            int diskY = baseY - (j + 1) * DISK_HEIGHT;
+            
+            // Create and draw the disk rectangle
             SDL_Rect diskRect = { diskX, diskY, diskWidth, DISK_HEIGHT - 2 };
-            SDL_SetRenderDrawColor(renderer, 0, 0, 255 - disk * 20, 255);
+            SDL_SetRenderDrawColor(renderer, 0, 0, 255 - disk * 20, 255);  // Color varies by size
             SDL_RenderFillRect(renderer, &diskRect);
             SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
             SDL_RenderDrawRect(renderer, &diskRect);
@@ -80,6 +88,7 @@ void drawTowers(SDL_Renderer *renderer, Tower towers[]) {
     SDL_RenderPresent(renderer);
 }
 
+// Draw a button on the screen
 void drawButton(SDL_Renderer *renderer, Button *button) {
     SDL_SetRenderDrawColor(renderer, 100, 100, 200, 255);
     SDL_RenderFillRect(renderer, &button->rect);
@@ -87,11 +96,13 @@ void drawButton(SDL_Renderer *renderer, Button *button) {
     SDL_RenderDrawRect(renderer, &button->rect);
 }
 
+// Check if a button is clicked based on mouse coordinates
 int isButtonClicked(Button *button, int mouseX, int mouseY) {
     return mouseX >= button->rect.x && mouseX <= button->rect.x + button->rect.w &&
            mouseY >= button->rect.y && mouseY <= button->rect.y + button->rect.h;
 }
 
+// Draw the difficulty selection screen and handle user input
 int drawDifficultySelection(SDL_Renderer *renderer) {
     Button buttons[3] = {
         {{WINDOW_WIDTH/4 - 60, WINDOW_HEIGHT/2 - 25, 120, 50}, "Easy"},

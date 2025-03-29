@@ -1,16 +1,10 @@
 #include <SDL2/SDL.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "hanoi.h"
-#include "towers.h"  // Added new module
-
-#define WINDOW_WIDTH 800
-#define WINDOW_HEIGHT 600
-#define TOWER_COUNT 3
-// Increased delay to slow down the animation.
-#define MOVE_INTERVAL 800   // milliseconds
+#include "towers.h"
 
 int main(int argc, char* argv[]) {
+    // Initialize SDL and create window/renderer
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         printf("SDL_Init error: %s\n", SDL_GetError());
         return 1;
@@ -33,21 +27,23 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    // Declare state variables and game objects
+    // Game state variables
     enum { STATE_PLAYING, STATE_WIN } gameState = STATE_PLAYING;
-    int quit = 0;
-    SDL_Event event;
-    int selectedTower = -1;
-    int diskCount;
-    Tower towers[TOWER_COUNT];
+    int quit = 0;                  // Main game loop control
+    SDL_Event event;              // SDL event handling
+    int selectedTower = -1;       // Currently selected tower (-1 = none)
+    int diskCount;                // Number of disks in current game
+    Tower towers[TOWER_COUNT];    // Array of towers
 
 restart_game:
-    // Get difficulty and reinitialize towers
+    // Initialize new game with selected difficulty
     diskCount = drawDifficultySelection(renderer);
-    if(diskCount == 0) {  // User clicked close window
+    if(diskCount == 0) {  // Handle window close during difficulty selection
         quit = 1;
         goto end_game;
     }
+
+    // Initialize towers and place all disks on first tower
     for (int i = 0; i < TOWER_COUNT; i++) { towers[i].count = 0; }
     for (int disk = diskCount; disk >= 1; disk--) { push(&towers[0], disk); }
     selectedTower = -1;
@@ -58,8 +54,12 @@ restart_game:
 
     while (!quit) {
         if(gameState == STATE_PLAYING) {
+            // Handle user input and game logic
             while(SDL_PollEvent(&event)) {
+                // Handle quit event
                 if(event.type == SDL_QUIT) { quit = 1; }
+                
+                // Handle mouse clicks for disk movement
                 if(event.type == SDL_MOUSEBUTTONDOWN) {
                     int mouseX = event.button.x;
                     int towerSpacing = WINDOW_WIDTH / (TOWER_COUNT + 1);
@@ -88,7 +88,11 @@ restart_game:
                     }
                 }
             }
+
+            // Render game state
             drawTowers(renderer, towers);
+            
+            // Highlight selected tower
             if(selectedTower != -1) {
                 int towerSpacing = WINDOW_WIDTH / (TOWER_COUNT + 1);
                 int center = towerSpacing * (selectedTower + 1);
@@ -99,6 +103,7 @@ restart_game:
             }
         }
         else if(gameState == STATE_WIN) {
+            // Handle win screen and button interactions
             // Render win screen with "You win!" text and two buttons.
             SDL_SetRenderDrawColor(renderer, 230, 230, 230, 255);
             SDL_RenderClear(renderer);
@@ -136,10 +141,11 @@ restart_game:
                 }
             }
         }
-        SDL_Delay(16);
+        SDL_Delay(16);  // Cap frame rate
     }
 
 end_game:
+    // Cleanup and exit
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(win);
     closeTTF();
