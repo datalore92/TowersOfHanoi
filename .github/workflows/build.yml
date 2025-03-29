@@ -52,7 +52,7 @@ jobs:
       run: |
         mkdir build
         cd build
-        cmake ..
+        cmake .. 
         cmake --build .
     - name: Package
       run: |
@@ -78,7 +78,7 @@ jobs:
       uses: softprops/action-gh-release@v1
       if: startsWith(github.ref, 'refs/tags/')
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
       with:
         files: |
           windows-build/TowersOfHanoi-windows.zip
